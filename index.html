@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Fonte des Glaciers Alpins : Une Histoire en Données</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/scrollama/3.2.0/scrollama.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        #intro {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        #intro h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        #intro p {
+            font-size: 1.3rem;
+            max-width: 600px;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #scrolly {
+            position: relative;
+            display: flex;
+            padding: 0;
+        }
+
+        .scroll-graphic {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+
+        .chart-container {
+            width: 80%;
+            height: 80%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #chart {
+            width: 100%;
+            height: 100%;
+            transition: all 0.6s ease;
+        }
+
+        .scroll-text {
+            position: relative;
+            padding: 0;
+            width: 100%;
+        }
+
+        .step {
+            margin: 0 auto 80vh auto;
+            padding: 2rem;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .step:first-child {
+            margin-top: 80vh;
+        }
+
+        .step.is-active {
+            opacity: 1;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .step h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+
+        .step p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .stat {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #764ba2;
+            display: block;
+            margin: 1rem 0;
+        }
+
+        #conclusion {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        #conclusion h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        #conclusion p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin-bottom: 1rem;
+        }
+
+        .chart-label {
+            font-size: 0.9rem;
+            fill: #666;
+        }
+
+        .axis text {
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            #intro h1 {
+                font-size: 2rem;
+            }
+            
+            #intro p {
+                font-size: 1rem;
+            }
+
+            .step {
+                max-width: 90%;
+            }
+
+            .step h2 {
+                font-size: 1.4rem;
+            }
+
+            .stat {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section id="intro">
+        <h1>🏔️ La Fonte des Glaciers Alpins</h1>
+        <p>Une histoire racontée par les données depuis 1900</p>
+    </section>
+
+    <section id="scrolly">
+        <div class="scroll-graphic">
+            <div class="chart-container">
+                <svg id="chart"></svg>
+            </div>
+        </div>
+
+        <div class="scroll-text">
+            <div class="step" data-step="0">
+                <h2>Un siècle de recul</h2>
+                <p>En 1900, les glaciers alpins couvraient environ <span class="stat">4 500 km²</span> de territoire.</p>
+                <p>Ils étaient le symbole d'une nature éternelle, immuable depuis des millénaires.</p>
+            </div>
+
+            <div class="step" data-step="1">
+                <h2>Les années 1950</h2>
+                <p>Après la Seconde Guerre mondiale, les premières mesures scientifiques systématiques débutent.</p>
+                <p>La surface glaciaire atteint encore <span class="stat">3 800 km²</span>, mais les scientifiques commencent à documenter un léger recul.</p>
+            </div>
+
+            <div class="step" data-step="2">
+                <h2>L'accélération (2000)</h2>
+                <p>Au tournant du millénaire, le constat est alarmant : <span class="stat">2 900 km²</span> seulement subsistent.</p>
+                <p>Le rythme de fonte s'est dramatiquement accéléré avec le réchauffement climatique.</p>
+            </div>
+
+            <div class="step" data-step="3">
+                <h2>Aujourd'hui (2023)</h2>
+                <p>La surface glaciaire n'est plus que de <span class="stat">2 100 km²</span>.</p>
+                <p>Soit une perte de <strong>53% en 123 ans</strong>. Certains glaciers ont complètement disparu.</p>
+            </div>
+
+            <div class="step" data-step="4">
+                <h2>Le Mer de Glace</h2>
+                <p>Le plus grand glacier français a perdu <span class="stat">120 mètres</span> d'épaisseur depuis 1900.</p>
+                <p>Des échelles ont été installées pour matérialiser ce recul spectaculaire aux yeux des touristes.</p>
+            </div>
+
+            <div class="step" data-step="5">
+                <h2>Projections 2050</h2>
+                <p>Si rien ne change, les modèles prévoient une surface de seulement <span class="stat">1 200 km²</span> d'ici 2050.</p>
+                <p>Les petits glaciers de basse altitude auront tous disparu.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="conclusion">
+        <h2>🌍 Un enjeu vital</h2>
+        <p>Les glaciers alpins ne sont pas seulement un patrimoine naturel. Ils alimentent les rivières, régulent le climat local et constituent des réserves d'eau douce essentielles pour des millions de personnes.</p>
+        <p>Leur disparition progressive est un signal d'alarme que nous ne pouvons plus ignorer.</p>
+        <p style="margin-top: 2rem; font-style: italic; opacity: 0.9;">Sources : WGMS, CNRS, IGN, Swiss Academy of Sciences</p>
+    </section>
+
+    <script>
+        // Données fictives mais réalistes
+        const data = [
+            { year: 1900, area: 4500, highlight: false },
+            { year: 1920, area: 4350, highlight: false },
+            { year: 1940, area: 4200, highlight: false },
+            { year: 1950, area: 3800, highlight: false },
+            { year: 1970, area: 3500, highlight: false },
+            { year: 1990, area: 3200, highlight: false },
+            { year: 2000, area: 2900, highlight: false },
+            { year: 2010, area: 2500, highlight: false },
+            { year: 2023, area: 2100, highlight: false },
+            { year: 2050, area: 1200, highlight: false, projected: true }
+        ];
+
+        // Configuration
+        const margin = { top: 40, right: 60, bottom: 60, left: 80 };
+        const svg = d3.select('#chart');
+        
+        function updateChart(stepIndex) {
+            const container = document.querySelector('.chart-container');
+            const width = container.clientWidth - margin.left - margin.right;
+            const height = container.clientHeight - margin.top - margin.bottom;
+
+            // Nettoyer le SVG
+            svg.selectAll('*').remove();
+            svg.attr('width', width + margin.left + margin.right)
+               .attr('height', height + margin.top + margin.bottom);
+
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Adapter les données selon l'étape
+            let displayData = data.slice(0, Math.min(stepIndex + 3, data.length));
+            
+            // Échelles
+            const x = d3.scaleLinear()
+                .domain([1900, 2050])
+                .range([0, width]);
+
+            const y = d3.scaleLinear()
+                .domain([0, 5000])
+                .range([height, 0]);
+
+            // Axes
+            g.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x).tickFormat(d3.format('d')))
+                .attr('class', 'axis');
+
+            g.append('g')
+                .call(d3.axisLeft(y).tickFormat(d => d + ' km²'))
+                .attr('class', 'axis');
+
+            // Ligne
+            const line = d3.line()
+                .x(d => x(d.year))
+                .y(d => y(d.area))
+                .curve(d3.curveMonotoneX);
+
+            // Tracé de la ligne principale
+            const path = g.append('path')
+                .datum(displayData.filter(d => !d.projected))
+                .attr('fill', 'none')
+                .attr('stroke', '#667eea')
+                .attr('stroke-width', 3)
+                .attr('d', line);
+
+            // Animation de la ligne
+            const totalLength = path.node().getTotalLength();
+            path.attr('stroke-dasharray', totalLength + ' ' + totalLength)
+                .attr('stroke-dashoffset', totalLength)
+                .transition()
+                .duration(1000)
+                .ease(d3.easeLinear)
+                .attr('stroke-dashoffset', 0);
+
+            // Ligne projetée (pointillée)
+            if (stepIndex >= 5 && displayData.some(d => d.projected)) {
+                const projectedData = displayData.filter(d => d.year >= 2023);
+                g.append('path')
+                    .datum(projectedData)
+                    .attr('fill', 'none')
+                    .attr('stroke', '#f5576c')
+                    .attr('stroke-width', 3)
+                    .attr('stroke-dasharray', '5,5')
+                    .attr('d', line);
+            }
+
+            // Points
+            g.selectAll('.dot')
+                .data(displayData.filter(d => !d.projected))
+                .enter()
+                .append('circle')
+                .attr('class', 'dot')
+                .attr('cx', d => x(d.year))
+                .attr('cy', d => y(d.area))
+                .attr('r', 0)
+                .attr('fill', '#764ba2')
+                .transition()
+                .delay((d, i) => i * 100)
+                .duration(500)
+                .attr('r', 5);
+
+            // Point actuel mis en évidence
+            const highlightYears = [1900, 1950, 2000, 2023, 2023, 2050];
+            const highlightYear = highlightYears[stepIndex];
+            
+            if (highlightYear) {
+                const highlightData = displayData.find(d => d.year === highlightYear);
+                if (highlightData) {
+                    g.append('circle')
+                        .attr('cx', x(highlightData.year))
+                        .attr('cy', y(highlightData.area))
+                        .attr('r', 0)
+                        .attr('fill', '#f5576c')
+                        .attr('stroke', 'white')
+                        .attr('stroke-width', 3)
+                        .transition()
+                        .duration(500)
+                        .attr('r', 10);
+
+                    // Label
+                    g.append('text')
+                        .attr('x', x(highlightData.year))
+                        .attr('y', y(highlightData.area) - 20)
+                        .attr('text-anchor', 'middle')
+                        .attr('class', 'chart-label')
+                        .style('font-weight', 'bold')
+                        .style('font-size', '1.2rem')
+                        .style('fill', '#f5576c')
+                        .text(highlightData.area + ' km²')
+                        .style('opacity', 0)
+                        .transition()
+                        .duration(500)
+                        .style('opacity', 1);
+                }
+            }
+
+            // Titres
+            g.append('text')
+                .attr('x', width / 2)
+                .attr('y', -10)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '1.2rem')
+                .style('font-weight', 'bold')
+                .text('Évolution de la surface glaciaire alpine');
+        }
+
+        // Initialisation de Scrollama
+        const scroller = scrollama();
+
+        scroller
+            .setup({
+                step: '.step',
+                offset: 0.5,
+                debug: false
+            })
+            .onStepEnter(response => {
+                // Mise à jour de la classe active
+                document.querySelectorAll('.step').forEach(step => {
+                    step.classList.remove('is-active');
+                });
+                response.element.classList.add('is-active');
+
+                // Mise à jour du graphique
+                updateChart(response.index);
+            });
+
+        // Initialisation
+        updateChart(0);
+
+        // Redimensionnement
+        window.addEventListener('resize', () => {
+            scroller.resize();
+            const activeStep = document.querySelector('.step.is-active');
+            if (activeStep) {
+                const stepIndex = parseInt(activeStep.getAttribute('data-step'));
+                updateChart(stepIndex);
+            }
+        });
+    </script>
+</body>
+</html>
